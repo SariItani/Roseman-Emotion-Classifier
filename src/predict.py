@@ -3,6 +3,8 @@ import joblib
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
 import pickle
+from nltk.corpus import stopwords
+import nltk
 
 # Load the tokenizer
 with open('../data/tokenizer.pkl', 'rb') as handle:
@@ -29,6 +31,15 @@ emotion_labels = ['Fear', 'Shame', 'Guilt', 'Disgust', 'Sadness', 'Anger', 'Joy'
 best_emotion_models = {emotion: joblib.load(f'../models/{emotion}_best_model.pkl') for emotion in emotion_labels}
 
 def preprocess_text(text):
+    nltk.download('stopwords')
+    stop_words = set(stopwords.words('english'))
+    custom_stop_words = {'felt', 'feeling', 'feel', 'i felt', 'it was', 'was'}
+
+    text = text.lower().replace('.', '').replace(',', '')
+    words = text.split()
+    filtered_words = [word for word in words if word not in stop_words and word not in custom_stop_words]
+    text = ' '.join(filtered_words)
+
     sequences = tokenizer.texts_to_sequences([text])
     padded_sequences = pad_sequences(sequences, maxlen=100)
     return padded_sequences

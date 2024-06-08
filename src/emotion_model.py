@@ -4,9 +4,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.svm import SVC
 from sklearn.neural_network import MLPClassifier
 from sklearn.naive_bayes import BernoulliNB
+from scipy.stats import pointbiserialr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -31,6 +33,28 @@ classifiers = {
     'Gradient Boosting': GradientBoostingClassifier(),
     'Bernoulli NB': BernoulliNB()
 }
+
+# One-Hot Encode the Emotion Labels
+encoder = OneHotEncoder(sparse_output=False)
+y_onehot = encoder.fit_transform(y.values.reshape(-1, 1))
+emotion_labels = encoder.categories_[0]
+
+# Compute Point-Biserial Correlation for Each Appraisal Dimension with Each Emotion
+correlations = {}
+for i, emotion in enumerate(emotion_labels):
+    correlations[emotion] = []
+    for col in X.columns:
+        corr, _ = pointbiserialr(X[col], y_onehot[:, i])
+        correlations[emotion].append(corr)
+
+# Convert the correlation results to a DataFrame for better visualization
+corr_df = pd.DataFrame(correlations, index=X.columns)
+
+# Plot the correlation matrix
+plt.figure(figsize=(12, 8))
+sns.heatmap(corr_df, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Between Appraisal Dimensions and Emotions')
+plt.savefig('../results/figures/appraisal_emotion_correlation.png')
 
 # Train and evaluate each classifier for each emotion
 best_results = {}
@@ -73,4 +97,3 @@ plt.xlabel('Accuracy')
 plt.title('Classifier Performance Comparison for Each Emotion')
 plt.tight_layout()  # Adjusts the plot to ensure everything fits
 plt.savefig('../results/figures/emotions_classifier_performance.png')
-plt.show()

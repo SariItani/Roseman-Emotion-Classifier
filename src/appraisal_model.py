@@ -75,19 +75,24 @@ for label, file in label_files.items():
 
     for model_name, model in models.items():
         accuracy, report = train_and_evaluate_model(model, X_train, y_train, X_val, y_val)
-        summary.append({
-            "Label": label,
-            "Model": model_name,
-            "Accuracy": accuracy
-        })
+        
         if accuracy > best_accuracy:
             best_accuracy = accuracy
             best_model = model
             best_model_name = model_name
             best_report = report
+        
+        print(f"Classifier: {model_name}")
+        print(f"Accuracy: {accuracy}")
+        print(f"Report:\n{report}")
 
     # Save the best model
     best_model.fit(X_train, y_train)
+    summary.append({
+        "Label": label,
+        "Model": best_model_name,
+        "Accuracy": best_accuracy
+    })
     joblib.dump(best_model, f"../models/{label}.pkl")
 
     # Save the classification report

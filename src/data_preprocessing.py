@@ -4,10 +4,28 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import numpy as np
 import pickle
 from gensim.models import Word2Vec
+from nltk.corpus import stopwords
+import nltk
+
+# Download NLTK stop words
+nltk.download('stopwords')
+stop_words = set(stopwords.words('english'))
+
+# Add custom repetitive meaningless words
+custom_stop_words = {'felt', 'feeling', 'feel', 'i felt', 'it was', 'was'}
 
 # Load the dataset
 df = pd.read_csv('../data/enISEAR_appraisal.tsv', sep='\t')
 texts = df['Sentence'].str.lower().str.replace('.', '', regex=True).str.replace(',', '', regex=True).tolist()
+
+# Function to remove stop words and custom meaningless words
+def remove_stop_words(text):
+    words = text.split()
+    filtered_words = [word for word in words if word not in stop_words and word not in custom_stop_words]
+    return ' '.join(filtered_words)
+
+# Apply the function to all sentences
+texts = [remove_stop_words(text) for text in texts]
 
 # Tokenize the text
 tokenizer = Tokenizer(num_words=5000)
